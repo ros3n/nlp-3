@@ -1,10 +1,15 @@
 from collections import defaultdict
+import sys
+import dill
 import numpy as np
 
 
 class ErrorProbabilityCalculator(object):
-    def __init__(self):
-        self.error_probability = defaultdict(lambda: 0)
+    def __init__(self, error_probability=None):
+        if error_probability:
+            self.error_probability = error_probability
+        else:
+            self.error_probability = defaultdict(lambda: 0)
         self.raw_data = []
 
     def levenshtein_distance(self, word_a, word_b):
@@ -44,3 +49,15 @@ class ErrorProbabilityCalculator(object):
     def calculate_probability(self, sample, correct):
         dist = self.levenshtein_distance(sample, correct)
         return self.error_probability[dist]
+
+    def dump_statistics(self, path):
+        with open(path, 'wb') as f:
+            dill.dump(self.error_probability, f)
+
+if __name__ == '__main__':
+    e = ErrorProbabilityCalculator()
+    e.read_data(sys.argv[1])
+    e.calculate_statistics()
+    e.dump_statistics('cache/ep.data')
+    with open('cache/ep.data', 'rb') as f:
+        print(dill.load(f))
